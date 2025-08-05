@@ -1,0 +1,42 @@
+/* GitHub Jira Integration Content Styles */
+
+.jira-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.jira-badge img {
+  filter: brightness(0) invert(1);
+}
+
+.jira-badge a {
+  color: inherit !important;
+  text-decoration: none;
+}
+
+.jira-badge a:hover {
+  text-decoration: underline;
+}
+
+.jira-ticket-info {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+}
+
+.jira-loading {
+  padding: 8px;
+  color: var(--color-fg-muted);
+  font-style: italic;
+}
+
+[data-jira-processed='true'] {
+  position: relative;
+}

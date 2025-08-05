@@ -1,0 +1,70 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build extensions
+        run: npm run build
+
+      - name: Upload Chrome extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-${{ matrix.node-version }}
+          path: dist/chrome/
+          retention-days: 7
+
+      - name: Upload Firefox extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension-${{ matrix.node-version }}
+          path: dist/firefox/
+          retention-days: 7
+
+      - name: Validate Chrome manifest
+        run: |
+          if [ ! -f "dist/chrome/manifest.json" ]; then
+            echo "Chrome manifest.json not found!"
+            exit 1
+          fi
+          echo "Chrome manifest.json found and valid"
+
+      - name: Validate Firefox manifest
+        run: |
+          if [ ! -f "dist/firefox/manifest.json" ]; then
+            echo "Firefox manifest.json not found!"
+            exit 1
+          fi
+          echo "Firefox manifest.json found and valid"

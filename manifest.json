@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Jira Integration",
+  "version": "0.1.0",
+  "description": "Shows contents of linked tasks from Jira in Github",
+  "author": "Adão Raul <adao.raul@gmail.com>",
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png",
+    "256": "src/icons/icon256.png",
+    "512": "src/icons/icon512.png"
+  },
+  "action": {
+    "default_popup": "src/pages/popup.html",
+    "default_icon": {
+      "16": "src/icons/icon16.png",
+      "48": "src/icons/icon48.png",
+      "128": "src/icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/pages/options.html",
+    "open_in_tab": false
+  },
+  "background": {
+    "service_worker": "src/scripts/background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://github.com/*"
+      ],
+      "js": [
+        "src/scripts/content.ts"
+      ],
+      "css": [
+        "src/styles/content.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*",
+    "https://*.jira.com/*",
+    "http://*.atlassian.net/*",
+    "http://*.jira.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/icons/jira.png"
+      ],
+      "matches": [
+        "*://github.com/*"
+      ]
+    }
+  ]
+}

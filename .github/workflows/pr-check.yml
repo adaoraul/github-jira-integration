@@ -1,0 +1,114 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Check linting
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build extensions
+        run: npm run build
+
+      - name: Check bundle size
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Chrome Extension" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh dist/chrome/* | sort -h >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Firefox Extension" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh dist/firefox/* | sort -h >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Chrome size:** $(du -sh dist/chrome | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Firefox size:** $(du -sh dist/firefox | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read manifest files
+            const chromeManifest = JSON.parse(fs.readFileSync('dist/chrome/manifest.json', 'utf8'));
+            const firefoxManifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
+            
+            // Calculate sizes
+            const { execSync } = require('child_process');
+            const chromeSize = execSync('du -sh dist/chrome').toString().split('\t')[0];
+            const firefoxSize = execSync('du -sh dist/firefox').toString().split('\t')[0];
+            
+            const body = `## ✅ Extension Build Successful
+            
+            ### 📦 Build Information
+            - **Chrome version**: ${chromeManifest.version} (${chromeSize})
+            - **Firefox version**: ${firefoxManifest.version} (${firefoxSize})
+            - **Node version**: ${process.version}
+            
+            ### 🔍 Checks Passed
+            - ✅ TypeScript compilation
+            - ✅ ESLint checks
+            - ✅ Prettier formatting
+            - ✅ Extension builds
+            
+            ### 📋 Permissions Required
+            **Chrome**: ${chromeManifest.permissions.join(', ')}
+            **Firefox**: ${firefoxManifest.permissions.join(', ')}`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Extension Build Successful')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

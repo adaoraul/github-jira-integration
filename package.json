@@ -1,0 +1,78 @@
+{
+  "name": "github-jira-extension",
+  "version": "0.1.0",
+  "description": "Cross-browser extension that shows contents of linked tasks from Jira in Github",
+  "scripts": {
+    "build": "extension build && npm run postbuild",
+    "dev": "extension dev",
+    "start": "extension dev",
+    "preview": "extension preview",
+    "postbuild": "mkdir -p dist/firefox dist/chrome/icons dist/chrome/action && cp src/assets/*.png dist/chrome/icons/ && cp src/assets/*.png dist/chrome/action/ && cp -r dist/chrome/* dist/firefox/ && cp src/assets/*.png dist/firefox/icons/ && cp src/assets/*.png dist/firefox/action/ && rm -f dist/firefox/manifest.json && cp manifest.firefox.json dist/firefox/manifest.json && sed -i '' 's|src/assets/jira.png|icons/jira.png|g' dist/chrome/manifest.json",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+    "format": "prettier --write 'src/**/*.{ts,tsx,json,css,md}'",
+    "format:check": "prettier --check 'src/**/*.{ts,tsx,json,css,md}'",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run build",
+    "version:set": "node bin/version.js",
+    "version:bump:patch": "node bin/version.js bump patch",
+    "version:bump:minor": "node bin/version.js bump minor",
+    "version:bump:major": "node bin/version.js bump major",
+    "version:current": "node bin/version.js current"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adaoraul/github-jira-extension.git"
+  },
+  "keywords": [
+    "browser-extension",
+    "github",
+    "jira",
+    "integration",
+    "firefox",
+    "chrome",
+    "edge"
+  ],
+  "author": "Adão Raul <adao.raul@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/adaoraul/github-jira-extension/issues"
+  },
+  "homepage": "https://github.com/adaoraul/github-jira-extension#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "extension": "^2.0.0-rc.38",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "prettier-eslint": "^16.4.2",
+    "tailwindcss": "^3.4.17",
+    "typescript-eslint": "^8.39.0"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@types/webextension-polyfill": "^0.12.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.536.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.9.2",
+    "webextension-polyfill": "^0.12.0"
+  }
+}
