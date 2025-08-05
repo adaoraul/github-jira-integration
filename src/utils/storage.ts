@@ -33,14 +33,15 @@ export class Storage {
         ? Array.isArray(keys)
           ? keys
           : [keys]
-        : Object.keys(DEFAULT_STORAGE_DATA);
+        : (Object.keys(DEFAULT_STORAGE_DATA) as (keyof StorageData)[]);
       const result = await api.storage.sync.get(keysArray);
 
       // Apply defaults for missing values
       const data: Partial<StorageData> = {};
       for (const key of keysArray) {
-        const typedKey = key as keyof StorageData;
-        (data as any)[typedKey] = result[typedKey] ?? DEFAULT_STORAGE_DATA[typedKey];
+        const value = result[key] ?? DEFAULT_STORAGE_DATA[key];
+        // Type assertion is safe here because we know the key is valid
+        (data as Record<keyof StorageData, unknown>)[key] = value;
       }
 
       return data;

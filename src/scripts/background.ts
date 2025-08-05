@@ -1,5 +1,6 @@
 import { api, isFirefox } from '../utils/browser-api';
 import { Storage } from '../utils/storage';
+import type { Runtime } from 'webextension-polyfill';
 
 // Background script for handling extension events
 console.log('GitHub Jira Integration - Background script loaded');
@@ -64,46 +65,40 @@ interface JiraRequest {
   ticketNumber?: string;
 }
 
-// Handle messages from content scripts
-api.runtime.onMessage.addListener((request: unknown, _sender, sendResponse) => {
+// Handle messages from content scripts - using async version
+api.runtime.onMessage.addListener(async (request: unknown, _sender: Runtime.MessageSender) => {
   const req = request as JiraRequest;
 
   if (req.action === 'openOptions') {
-    api.runtime.openOptionsPage();
-    return false as any;
+    await api.runtime.openOptionsPage();
+    return;
   }
 
-  // Handle async requests
-  (async () => {
-    try {
-      if (req.query === 'getSession' && req.jiraUrl) {
-        const url = `https://${req.jiraUrl}/rest/auth/1/session`;
-        try {
-          const data = await makeJiraRequest(url, req.jiraUrl);
-          sendResponse(data);
-        } catch (error) {
-          // Session check failed, but we can still try API token auth
-          const config = await Storage.getAll();
-          if (isFirefox() && config.jiraEmail && config.jiraApiToken) {
-            // Return a fake session to indicate we have auth
-            sendResponse({ name: config.jiraEmail });
-          } else {
-            sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
-          }
-        }
-      } else if (req.query === 'getJiraTicket' && req.jiraUrl && req.ticketNumber) {
-        const url = `https://${req.jiraUrl}/rest/api/latest/issue/${req.ticketNumber}`;
+  try {
+    if (req.query === 'getSession' && req.jiraUrl) {
+      const url = `https://${req.jiraUrl}/rest/auth/1/session`;
+      try {
         const data = await makeJiraRequest(url, req.jiraUrl);
-        sendResponse(data);
-      } else {
-        sendResponse({ error: 'Unknown query type' });
+        return data;
+      } catch (error) {
+        // Session check failed, but we can still try API token auth
+        const config = await Storage.getAll();
+        if (isFirefox() && config.jiraEmail && config.jiraApiToken) {
+          // Return a fake session to indicate we have auth
+          return { name: config.jiraEmail };
+        } else {
+          return { error: error instanceof Error ? error.message : 'Unknown error' };
+        }
       }
-    } catch (error) {
-      console.error('Background script error:', error);
-      sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+    } else if (req.query === 'getJiraTicket' && req.jiraUrl && req.ticketNumber) {
+      const url = `https://${req.jiraUrl}/rest/api/latest/issue/${req.ticketNumber}`;
+      const data = await makeJiraRequest(url, req.jiraUrl);
+      return data;
+    } else {
+      return { error: 'Unknown query type' };
     }
-  })();
-
-  // Return true to indicate async response
-  return true as any;
+  } catch (error) {
+    console.error('Background script error:', error);
+    return { error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 });

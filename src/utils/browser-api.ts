@@ -9,14 +9,22 @@ export const api = Browser;
 // Type exports for convenience
 export type { Browser } from 'webextension-polyfill';
 
+// Define a more specific type for the global object
+interface BrowserGlobal {
+  browser?: {
+    runtime?: unknown;
+  };
+  chrome?: {
+    runtime?: unknown;
+  };
+}
+
 // Helper functions for common operations
 export const getBrowserInfo = () => {
-  if (typeof (globalThis as any).browser !== 'undefined' && (globalThis as any).browser.runtime) {
+  const global = globalThis as unknown as BrowserGlobal;
+  if (typeof global.browser !== 'undefined' && global.browser.runtime) {
     return 'firefox';
-  } else if (
-    typeof (globalThis as any).chrome !== 'undefined' &&
-    (globalThis as any).chrome.runtime
-  ) {
+  } else if (typeof global.chrome !== 'undefined' && global.chrome.runtime) {
     return 'chrome';
   }
   return 'unknown';

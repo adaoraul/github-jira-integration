@@ -15,8 +15,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -56,45 +56,45 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             // Read manifest files
             const chromeManifest = JSON.parse(fs.readFileSync('dist/chrome/manifest.json', 'utf8'));
             const firefoxManifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
-            
+
             // Calculate sizes
             const { execSync } = require('child_process');
             const chromeSize = execSync('du -sh dist/chrome').toString().split('\t')[0];
             const firefoxSize = execSync('du -sh dist/firefox').toString().split('\t')[0];
-            
+
             const body = `## ✅ Extension Build Successful
-            
+
             ### 📦 Build Information
             - **Chrome version**: ${chromeManifest.version} (${chromeSize})
             - **Firefox version**: ${firefoxManifest.version} (${firefoxSize})
             - **Node version**: ${process.version}
-            
+
             ### 🔍 Checks Passed
             - ✅ TypeScript compilation
             - ✅ ESLint checks
             - ✅ Prettier formatting
             - ✅ Extension builds
-            
+
             ### 📋 Permissions Required
             **Chrome**: ${chromeManifest.permissions.join(', ')}
             **Firefox**: ${firefoxManifest.permissions.join(', ')}`;
-            
+
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
               comment.body.includes('Extension Build Successful')
             );
-            
+
             if (botComment) {
               // Update existing comment
               await github.rest.issues.updateComment({

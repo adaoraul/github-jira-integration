@@ -7,7 +7,7 @@
     "dev": "extension dev",
     "start": "extension dev",
     "preview": "extension preview",
-    "postbuild": "mkdir -p dist/firefox dist/chrome/icons dist/chrome/action && cp src/assets/*.png dist/chrome/icons/ && cp src/assets/*.png dist/chrome/action/ && cp -r dist/chrome/* dist/firefox/ && cp src/assets/*.png dist/firefox/icons/ && cp src/assets/*.png dist/firefox/action/ && rm -f dist/firefox/manifest.json && cp manifest.firefox.json dist/firefox/manifest.json && sed -i '' 's|src/assets/jira.png|icons/jira.png|g' dist/chrome/manifest.json",
+    "postbuild": "node bin/postbuild.js",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,json,css,md}'",

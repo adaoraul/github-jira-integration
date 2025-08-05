@@ -3,11 +3,11 @@ name: Release and Publish
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., v1.0.0)'
+        description: "Version to release (e.g., v1.0.0)"
         required: true
         type: string
 
@@ -22,17 +22,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Run tests
-        run: npm run check
-
-      - name: Build extensions
-        run: npm run build
 
       - name: Get version
         id: get_version
@@ -45,17 +39,16 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
 
-      - name: Update manifest versions
+      - name: Update version using npm command
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION_NUMBER }}"
-          
-          # Update Chrome manifest
-          jq --arg version "$VERSION" '.version = $version' dist/chrome/manifest.json > dist/chrome/manifest.tmp.json
-          mv dist/chrome/manifest.tmp.json dist/chrome/manifest.json
-          
-          # Update Firefox manifest
-          jq --arg version "$VERSION" '.version = $version' dist/firefox/manifest.json > dist/firefox/manifest.tmp.json
-          mv dist/firefox/manifest.tmp.json dist/firefox/manifest.json
+          npm run version:set -- "$VERSION"
+
+      - name: Run tests
+        run: npm run check
+
+      - name: Build extensions
+        run: npm run build
 
       - name: Package Chrome extension
         run: |
@@ -79,21 +72,21 @@ jobs:
           release_name: Release ${{ steps.get_version.outputs.VERSION }}
           body: |
             ## Changes in this Release
-            
+
             ### Chrome Extension
             - Download: chrome-extension-${{ steps.get_version.outputs.VERSION }}.zip
-            
+
             ### Firefox Extension
             - Download: firefox-extension-${{ steps.get_version.outputs.VERSION }}.zip
-            
+
             ### Installation Instructions
-            
+
             #### Chrome
             1. Download the Chrome extension ZIP file
             2. Open Chrome and navigate to `chrome://extensions/`
             3. Enable "Developer mode"
             4. Click "Load unpacked" and select the extracted folder
-            
+
             #### Firefox
             1. Download the Firefox extension ZIP file
             2. Open Firefox and navigate to `about:debugging`
@@ -135,26 +128,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Chrome extension
-        run: npm run build
-
-      - name: Get version
+      - name: Get version and update
         id: get_version
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
+          npm run version:set -- "${VERSION#v}"
 
-      - name: Update Chrome manifest version
-        run: |
-          VERSION="${{ steps.get_version.outputs.VERSION_NUMBER }}"
-          jq --arg version "$VERSION" '.version = $version' dist/chrome/manifest.json > dist/chrome/manifest.tmp.json
-          mv dist/chrome/manifest.tmp.json dist/chrome/manifest.json
+      - name: Build Chrome extension
+        run: npm run build
 
       - name: Package Chrome extension for store
         run: |
@@ -192,26 +180,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Firefox extension
-        run: npm run build
-
-      - name: Get version
+      - name: Get version and update
         id: get_version
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
+          npm run version:set -- "${VERSION#v}"
 
-      - name: Update Firefox manifest version
-        run: |
-          VERSION="${{ steps.get_version.outputs.VERSION_NUMBER }}"
-          jq --arg version "$VERSION" '.version = $version' dist/firefox/manifest.json > dist/firefox/manifest.tmp.json
-          mv dist/firefox/manifest.tmp.json dist/firefox/manifest.json
+      - name: Build Firefox extension
+        run: npm run build
 
       - name: Package Firefox extension for store
         run: |
